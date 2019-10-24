@@ -25,7 +25,8 @@ public class Reel : MonoBehaviour
     [SerializeField]
     public float cellHeight = 1.48f;
 
-    private List<GameObject> cells = new List<GameObject>();
+    private List<GameObject> cellGameObjects = new List<GameObject>();
+    private List<ReelCell> reelCells = new List<ReelCell>();
 
     private float reelSpeed = 0.0f;
     private float reelFriction = 0.0f;
@@ -44,6 +45,8 @@ public class Reel : MonoBehaviour
 
     private const int totalCells = 100;
     private const int visibleCells = 3;
+
+    public event EventHandler ReelStopped;
 
     // Start is called before the first frame update
     void Start()
@@ -64,9 +67,11 @@ public class Reel : MonoBehaviour
         {
             var cell = Instantiate(reelCell, new Vector3(0, i * cellHeight, 0), Quaternion.identity);
             cell.GetComponent<ReelCell>().symbolType = indexes[i];
-            cells.Add(cell);
+            cellGameObjects.Add(cell);
 
             cell.transform.SetParent(transform);
+
+            reelCells.Add(cell.GetComponent<ReelCell>());
         }
 
         transform.position = new Vector3(columnOffset + (column * cellWidth), maxY);
@@ -78,9 +83,6 @@ public class Reel : MonoBehaviour
 
     public void SpinReel()
     {
-        // dots per inch - TODO: get from actual sprites?
-        var dpi = 100;
-
         spinningUp = true;
         reelStopped = true;
         readyForScore = false;
@@ -97,6 +99,22 @@ public class Reel : MonoBehaviour
             startTime = Time.time;
         });
     }
+
+    public int [] GetDisplayedCells()
+    {
+        var offset = Math.Abs(transform.position.y);
+        var index = (int)Math.Floor(offset / cellHeight);
+        var values = new int [3];
+
+        int j = 3;
+        for (int i = index; i < index + 3; i++, j--)
+        {
+            values[j - 1] = reelCells[i].symbolType;
+        }
+
+        return values;
+    }
+
 
     IEnumerator Stop(float waitTime)
     {
@@ -128,7 +146,6 @@ public class Reel : MonoBehaviour
                 var randomTime = Random.Range(800, 2000);
 
                 // fire a timer after this time
-                //this.game.time.events.add(randomTime, this.stop, this);
                 StartCoroutine(Stop(randomTime));
 
                 spinningUp = false;
@@ -172,10 +189,8 @@ public class Reel : MonoBehaviour
                 OnComplete(() =>
                {
                    readyForScore = true;
+                   ReelStopped?.Invoke(this, new EventArgs());
                });
-                    
-                //tween.to({ y: destinationY }, 350, Phaser.Easing.Bounce.Out, false).start();
-                //tween.onComplete.addOnce(() => { this.readyForScore = true }, this);
             }
         }
 
@@ -196,7 +211,6 @@ public class Reel : MonoBehaviour
         var indexes = new LinkedList<int>();
 
         // 100 on each real, 3 visible which go on top
-
         var weightedRand = WeightedRand(weights);
 
         for(var i=0; i < totalCells - visibleCells; i++ )
