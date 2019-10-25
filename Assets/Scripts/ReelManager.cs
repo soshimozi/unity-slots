@@ -256,7 +256,7 @@ public class ReelManager : MonoBehaviour
         Debug.Log(string.Format("{0}, {1}, {2}, {3}, {4}", tableu[0, 1], tableu[1, 1], tableu[2, 1], tableu[3, 1], tableu[4, 1]));
         Debug.Log(string.Format("{0}, {1}, {2}, {3}, {4}", tableu[0, 2], tableu[1, 2], tableu[2, 2], tableu[3, 2], tableu[4, 2]));
 
-        StartCoroutine(DisplayWinLines());
+        StartCoroutine(DisplayWinLines(tableu));
         //StopCoroutine(cr);
 
         // we should set up a timer to turn on each one in turn
@@ -280,7 +280,7 @@ public class ReelManager : MonoBehaviour
 
     }
 
-    IEnumerator DisplayWinLines()
+    IEnumerator DisplayWinLines(int[,] tableu)
     {
         var winLines = GetWinLines();
         if (winLines.Length == 0)
@@ -298,6 +298,9 @@ public class ReelManager : MonoBehaviour
         }
 
         var currentPayline = 0;
+
+        int[] row = new int[5];
+        const int intSize = 4;
 
         while (!spinning)
         {
@@ -391,6 +394,23 @@ public class ReelManager : MonoBehaviour
         leftIndicators[lineIndex].isActive = true;
         rightIndicators[lineIndex].isActive = true;
         winLines[lineIndex].SetActive(true);
+
+
+        for(int i=0; i<paylineCheckPatterns[lineIndex].Length; i++)
+        {
+            var row = paylineCheckPatterns[lineIndex][i];
+            reels[i].ShowWinning(row, true);
+        }
+        //for(int i=0; i<rowData.Length; i++)
+        //{
+        //    // the value in rowdata tells us which row
+        //    // the match is in for that column
+
+        //    var row = rowData[i];
+
+        //    reels[lineIndex].ShowWinning(row, true);
+        //}
+
     }
 
     void HideWinLine(int lineIndex)
@@ -398,6 +418,22 @@ public class ReelManager : MonoBehaviour
         leftIndicators[lineIndex].isActive = false;
         rightIndicators[lineIndex].isActive = false;
         winLines[lineIndex].SetActive(false);
+
+        for (int i = 0; i < paylineCheckPatterns[lineIndex].Length; i++)
+        {
+            var row = paylineCheckPatterns[lineIndex][i];
+            reels[i].ShowWinning(row, false);
+        }
+        //for (int i = 0; i < rowData.Length; i++)
+        //{
+        //    // the value in rowdata tells us which row
+        //    // the match is in for that column
+
+        //    var row = rowData[i];
+
+        //    reels[lineIndex].ShowWinning(row, false);
+        //}
+
     }
 
     private void ReelScript_ReelStopped(object sender, System.EventArgs e)
@@ -438,6 +474,15 @@ public class ReelManager : MonoBehaviour
         for (var i = 0; i < winLines.Length; i++)
         {
             winLines[i].SetActive(false);
+        }
+
+        for(var i=0; i<reels.Count; i++)
+        {
+            // todo get rid of "magic number"
+            for (var j = 0; j < 3; j++)
+            {
+                reels[i].ShowWinning(j, false);
+            }
         }
     }
 

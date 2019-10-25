@@ -49,4 +49,8 @@ MonoBehaviour:
   columnOffset: -3.5
   cellWidth: 1.75
   cellHeight: 1.48
+  topY: 2.22
+  winAnimation: {fileID: 3653064302845178985, guid: 021a182ece9cbdb49a24a6e8511d7da5,
+    type: 3}
+  frame: {fileID: 4995192565149443982, guid: c15e9c34b07b5f54b94770d46ac67f64, type: 3}
   readyForScore: 0

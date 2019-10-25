@@ -17,16 +17,28 @@ public class Reel : MonoBehaviour
     public GameObject reelCell;
 
     [SerializeField]
-    public float columnOffset = -3.5f;
+    public float columnOffset;
 
     [SerializeField]
-    public float cellWidth = 1.73f;
+    public float cellWidth;
 
     [SerializeField]
-    public float cellHeight = 1.48f;
+    public float cellHeight;
+
+    [SerializeField]
+    public float topY;
+
+    [SerializeField]
+    public GameObject winAnimation;
+
+    [SerializeField]
+    public GameObject frame;
 
     private List<GameObject> cellGameObjects = new List<GameObject>();
     private List<ReelCell> reelCells = new List<ReelCell>();
+
+    private List<GameObject> winningAnimations = new List<GameObject>();
+    private List<GameObject> frames = new List<GameObject>();
 
     private float reelSpeed = 0.0f;
     private float reelFriction = 0.0f;
@@ -48,6 +60,8 @@ public class Reel : MonoBehaviour
 
     public event EventHandler ReelStopped;
 
+    
+
     // Start is called before the first frame update
     void Start()
     {
@@ -59,7 +73,7 @@ public class Reel : MonoBehaviour
 
         var indexes = BuildIndexes(weights);
 
-        maxY = (-cellHeight * (indexes.Length - 3));
+        maxY = (-cellHeight * (indexes.Length - visibleCells));
         maxY += halfCellHeight;
 
         // instantiating symbols on reel
@@ -76,7 +90,22 @@ public class Reel : MonoBehaviour
 
         transform.position = new Vector3(columnOffset + (column * cellWidth), maxY);
 
-        reelHeight = indexes.Length - 3;
+        for (int i = 0; i < visibleCells; i++)
+        {
+            var pos = new Vector3(columnOffset + (column * cellWidth), topY - (i * cellHeight));
+
+            var winningAnimationObject = Instantiate(winAnimation, pos, Quaternion.identity);
+            var frameObject = Instantiate(frame, pos, Quaternion.identity);
+
+            winningAnimations.Add(winningAnimationObject);
+            frames.Add(frameObject);
+
+            frameObject.SetActive(false);
+            winningAnimationObject.SetActive(false);
+        }
+
+
+        reelHeight = indexes.Length - visibleCells;
 
         readyForScore = false;
     }
@@ -114,7 +143,13 @@ public class Reel : MonoBehaviour
 
         return values;
     }
+    
+    public void ShowWinning(int row, bool show)
+    {
+        winningAnimations[row].SetActive(show);
+        frames[row].SetActive(show);
 
+    }
 
     IEnumerator Stop(float waitTime)
     {
