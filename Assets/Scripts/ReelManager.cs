@@ -165,7 +165,7 @@ public class ReelManager : MonoBehaviour
         leftIndicators[lineNumber] = CreateLineIndicator(lineNumber, leftColumnEdge);
     }
 
-    private int [] GetWinLines()
+    private int [] GetWinningRows()
     {
         List<int> winLines = new List<int>();
         for (var i = 0; i < paylineCounts[currentBet.PayLinesIndex]; i++)
@@ -247,60 +247,30 @@ public class ReelManager : MonoBehaviour
             }
         }
 
-
-        //var winLines = GetWinLines();
-        //if (winLines.Length == 0) return;
-
-
-        Debug.Log(string.Format("{0}, {1}, {2}, {3}, {4}", tableu[0, 0], tableu[1, 0], tableu[2, 0], tableu[3, 0], tableu[4, 0]));
-        Debug.Log(string.Format("{0}, {1}, {2}, {3}, {4}", tableu[0, 1], tableu[1, 1], tableu[2, 1], tableu[3, 1], tableu[4, 1]));
-        Debug.Log(string.Format("{0}, {1}, {2}, {3}, {4}", tableu[0, 2], tableu[1, 2], tableu[2, 2], tableu[3, 2], tableu[4, 2]));
-
-        StartCoroutine(DisplayWinLines(tableu));
-        //StopCoroutine(cr);
-
-        // we should set up a timer to turn on each one in turn
-        // until we pull the handle again
-        //winLines[1].SetActive(true);
-        //winLines[3].SetActive(true);
-        //winLines[6].SetActive(true);
-        //winLines[5].SetActive(true);
-
-        //leftIndicators[1].isActive = true;
-        //rightIndicators[1].isActive = true;
-
-        //leftIndicators[3].isActive = true;
-        //rightIndicators[3].isActive = true;
-
-        //leftIndicators[5].isActive = true;
-        //rightIndicators[5].isActive = true;
-
-        //leftIndicators[6].isActive = true;
-        //rightIndicators[6].isActive = true;
-
-    }
-
-    IEnumerator DisplayWinLines(int[,] tableu)
-    {
-        var winLines = GetWinLines();
-        if (winLines.Length == 0)
+        var winningRows = GetWinningRows();
+        if (winningRows.Length == 0)
         {
             // no win lines, so we can spin immediately
             SetReadyToSpin();
-            yield break;
+            return;
         }
 
+        UpdateScores(tableu, winningRows);
+
+        StartCoroutine(DisplayWinLines(winningRows));
+    }
+
+    IEnumerator DisplayWinLines(int [] winningRows)
+    {
+
         // this is a problem
-        if (winLines.Length > paylineCounts[currentBet.PayLinesIndex])
+        if (winningRows.Length > paylineCounts[currentBet.PayLinesIndex])
         {
             SetReadyToSpin();
             yield break;
         }
 
         var currentPayline = 0;
-
-        int[] row = new int[5];
-        const int intSize = 4;
 
         while (!spinning)
         {
@@ -309,13 +279,13 @@ public class ReelManager : MonoBehaviour
                 break;
             }
 
-            DisplayWinLine(winLines[currentPayline]);
+            DisplayWinLine(winningRows[currentPayline]);
             yield return new WaitForSeconds(1.5f);
-            HideWinLine(winLines[currentPayline]);
+            HideWinLine(winningRows[currentPayline]);
 
             currentPayline++;
 
-            if (currentPayline >= winLines.Length)
+            if (currentPayline >= winningRows.Length)
             {
                 currentPayline = 0;
 
@@ -328,65 +298,6 @@ public class ReelManager : MonoBehaviour
         }
 
         yield break;
-
-        //DisplayWinLine(1);
-        //    yield return new WaitForSeconds(1.5f);
-        //    HideWinLine(1);
-
-        //    //if (!readyToSpin) break;
-
-        //    DisplayWinLine(3);
-        //    yield return new WaitForSeconds(1.5f);
-        //    HideWinLine(3);
-
-        //   // if (!readyToSpin) break;
-
-        //    DisplayWinLine(5);
-        //    yield return new WaitForSeconds(1.5f);
-        //    HideWinLine(5);
-
-        //   // if (!readyToSpin) break;
-
-        //    DisplayWinLine(6);
-        //    yield return new WaitForSeconds(1.5f);
-        //    HideWinLine(6);
-
-        //    SetReadyToSpin();
-
-        //while (readyToSpin)
-        //{
-        //    if (!readyToSpin) yield break;
-
-        //    DisplayWinLine(1);
-        //    yield return new WaitForSeconds(1.5f);
-        //    HideWinLine(1);
-
-        //    //if (!readyToSpin) break;
-
-        //    if (!readyToSpin) yield break;
-        //    DisplayWinLine(3);
-        //    yield return new WaitForSeconds(1.5f);
-        //    HideWinLine(3);
-
-        //    // if (!readyToSpin) break;
-
-        //    if (!readyToSpin) yield break;
-        //    DisplayWinLine(5);
-        //    yield return new WaitForSeconds(1.5f);
-        //    HideWinLine(5);
-
-        //    // if (!readyToSpin) break;
-
-        //    if (!readyToSpin) yield break;
-        //    DisplayWinLine(6);
-        //    yield return new WaitForSeconds(1.5f);
-        //    HideWinLine(6);
-
-        //    if (!readyToSpin) yield break;
-        //}
-
-
-        //if (!readyToSpin) yield break;
     }
 
     void DisplayWinLine(int lineIndex)
@@ -395,21 +306,14 @@ public class ReelManager : MonoBehaviour
         rightIndicators[lineIndex].isActive = true;
         winLines[lineIndex].SetActive(true);
 
+        // let's get count of matches on the payline
+        var matchCount = CheckPayLine(paylineCheckPatterns[lineIndex]);
 
-        for(int i=0; i<paylineCheckPatterns[lineIndex].Length; i++)
+        for (int i=0; i<matchCount + 1; i++)
         {
             var row = paylineCheckPatterns[lineIndex][i];
             reels[i].ShowWinning(row, true);
         }
-        //for(int i=0; i<rowData.Length; i++)
-        //{
-        //    // the value in rowdata tells us which row
-        //    // the match is in for that column
-
-        //    var row = rowData[i];
-
-        //    reels[lineIndex].ShowWinning(row, true);
-        //}
 
     }
 
@@ -424,16 +328,6 @@ public class ReelManager : MonoBehaviour
             var row = paylineCheckPatterns[lineIndex][i];
             reels[i].ShowWinning(row, false);
         }
-        //for (int i = 0; i < rowData.Length; i++)
-        //{
-        //    // the value in rowdata tells us which row
-        //    // the match is in for that column
-
-        //    var row = rowData[i];
-
-        //    reels[lineIndex].ShowWinning(row, false);
-        //}
-
     }
 
     private void ReelScript_ReelStopped(object sender, System.EventArgs e)
@@ -484,6 +378,31 @@ public class ReelManager : MonoBehaviour
                 reels[i].ShowWinning(j, false);
             }
         }
+    }
+
+    private void UpdateScores(int [,] tableu, int [] winningRows)
+    {
+        var totalWinnings = 0;
+
+        //5 4 3 5 1
+        //5 5 5 4 2
+        //5 5 3 3 3
+
+        // for each payline we multply the bet by the payout amount of the first match
+        for (var i = 0; i < winningRows.Length; i++)
+        {
+            // let's get count of matches on the payline
+            var matchCount = CheckPayLine(paylineCheckPatterns[winningRows[i]]);
+
+            var matchIndex = matchCount - 2;
+
+            var cellIndex = tableu[0, paylineCheckPatterns[winningRows[i]][0]];
+            var payoutAmount = payoutTable[cellIndex, matchIndex];
+
+            totalWinnings += payoutAmount * currentBet.Amount * (currentBet.IsDoubleDown ? 2 : 1);
+        }
+
+        totalWinningsText = $"{totalWinnings} TICKETS";
     }
 
     public void PullHandle(bool autoSpin)

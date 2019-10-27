@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SpinNumber : MonoBehaviour
+public class IntegerSprite : MonoBehaviour
 {
     SpriteText tm;
 
     [SerializeField]
-    public int spinsRemaining;
+    public int number;
 
     // Start is called before the first frame update
     void Start()
@@ -18,6 +18,6 @@ public class SpinNumber : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        tm.spriteText = spinsRemaining.ToString();
+        tm.spriteText = number.ToString();
     }
 }
