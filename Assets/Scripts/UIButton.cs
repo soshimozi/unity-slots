@@ -3,50 +3,34 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class AutoSpinButton : MonoBehaviour
+public class UIButton : MonoBehaviour
 {
     [SerializeField]
-    public GameObject reelManagerObject;
-
-    [SerializeField]
     public Sprite inactiveSprite;
+
     [SerializeField]
     public Sprite activeSprite;
 
-    //private ReelManager reelManager;
-
-    //private CircleCollider2D collider;
     private SpriteRenderer spriteRenderer;
 
     private bool isDisabled = false;
 
-    public event EventHandler OnSpin;
+    public event EventHandler OnClick;
 
     // Start is called before the first frame update
     void Start()
     {
-        //reelManager = reelManagerObject.GetComponent<ReelManager>();
-
-        //collider = GetComponent<CircleCollider2D>();
-
         spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
-    // Update is called once per frame
     void Update()
     {
-        
-        //if(reelManager.IsReady())
-        //{
-        //    spriteRenderer.color = Color.white;
-        //    disabled = false;
-        //}
     }
 
     private void OnMouseUpAsButton()
     {
         if(!isDisabled)
-        OnSpin?.Invoke(this, new EventArgs());
+        OnClick?.Invoke(this, new EventArgs());
     }
 
     public void SetDisable(bool disable)

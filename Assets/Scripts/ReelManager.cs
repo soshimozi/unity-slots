@@ -39,14 +39,23 @@ public class ReelManager : MonoBehaviour
 
     [SerializeField]
     public GameObject autoSpinButtonObject;
+    private UIButton autoSpinButton;
 
-    private AutoSpinButton autoSpinButton;
+    [SerializeField]
+    public GameObject lineButtonObject;
+    private UIButton lineButton;
+
+    [SerializeField]
+    public GameObject [] lineIndicatorObjects;
+    private List<LineIndicator> lineIndicators = new List<LineIndicator>();
+
 
     private int stoppedCount;
     private GameObject[] reelObjects;
     private List<Reel> reels = new List<Reel>();
 
     private int selectedPayLines;
+    private int linesIndicatorIndex = 0;
 
     private bool autoSpin;
     private bool readyToSpin;
@@ -112,10 +121,61 @@ public class ReelManager : MonoBehaviour
         maxBet = 15;
         totalWinningsText = "";
 
-        autoSpinButton = autoSpinButtonObject.GetComponent<AutoSpinButton>();
+        for(var i=0; i<lineIndicatorObjects.Length; i++)
+        {
+            var indicator = lineIndicatorObjects[i].GetComponent<LineIndicator>();
+            indicator.lineNumber = i;
+            indicator.isActive = false;
+
+            lineIndicators.Add(indicator);
+        }
+
+        lineIndicators[0].isActive = true;
+        currentBet.PayLinesIndex = 0;
+        currentBetAmount = 1;
+
+        autoSpinButton = autoSpinButtonObject.GetComponent<UIButton>();
         autoSpinButton.SetDisable(false);
 
-        autoSpinButton.OnSpin += AutoSpinButton_OnSpin;
+        autoSpinButton.OnClick += AutoSpinButton_OnSpin;
+
+        lineButton = lineButtonObject.GetComponent<UIButton>();
+        lineButton.SetDisable(false);
+
+        lineButton.OnClick += LineButton_OnClick;
+    }
+
+    private void LineButton_OnClick(object sender, EventArgs e)
+    {
+        // cycle through the numbers {1 3 5 7 9}
+        linesIndicatorIndex += 1;
+        if(linesIndicatorIndex >= lineIndicators.Count)
+        {
+            linesIndicatorIndex = 0;
+        }
+
+        selectedPayLines = paylineCounts[linesIndicatorIndex];
+
+        HideLinesIndicators();
+
+        lineIndicators[linesIndicatorIndex].isActive = true;
+
+        // get list of lines we should activate
+
+        leftIndicators[lineIndex].isActive = false;
+        rightIndicators[lineIndex].isActive = false;
+
+        leftIndicators[lineIndex].isActive = true;
+        rightIndicators[lineIndex].isActive = true;
+
+    }
+
+    private void HideLinesIndicators()
+    {
+        foreach(var ind in lineIndicators)
+        {
+            ind.isActive = false;
+        }
     }
 
     private void AddIndicatorIcons()
@@ -302,8 +362,6 @@ public class ReelManager : MonoBehaviour
 
     void DisplayWinLine(int lineIndex)
     {
-        leftIndicators[lineIndex].isActive = true;
-        rightIndicators[lineIndex].isActive = true;
         winLines[lineIndex].SetActive(true);
 
         // let's get count of matches on the payline
@@ -319,8 +377,6 @@ public class ReelManager : MonoBehaviour
 
     void HideWinLine(int lineIndex)
     {
-        leftIndicators[lineIndex].isActive = false;
-        rightIndicators[lineIndex].isActive = false;
         winLines[lineIndex].SetActive(false);
 
         for (int i = 0; i < paylineCheckPatterns[lineIndex].Length; i++)
@@ -409,7 +465,7 @@ public class ReelManager : MonoBehaviour
     {
         ClearWinLines();
 
-        ClearIndicators();
+        //ClearIndicators();
 
         readyToShowResults = false;
         readyToSpin = false;
@@ -418,13 +474,24 @@ public class ReelManager : MonoBehaviour
 
         currentBet.Amount = paylineCounts[selectedPayLines] * currentBetAmount;
         currentBet.IsDoubleDown = isDoubleDown;
-        currentBet.PayLinesIndex = 4;
+        currentBet.PayLinesIndex = selectedPayLines;
 
         stoppedCount = 0;
+        StartCoroutine(SpinReels());
+        //for (var i = 0; i < reelCount; i++)
+        //{
+        //    reels[i].SpinReel();
+        //}
+    }
+
+    IEnumerator SpinReels()
+    {
         for (var i = 0; i < reelCount; i++)
         {
             reels[i].SpinReel();
+            yield return new WaitForSeconds(0.10f);
         }
+
     }
 
     // Update is called once per frame
