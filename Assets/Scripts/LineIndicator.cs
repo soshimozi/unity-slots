@@ -16,18 +16,18 @@ public class LineIndicator : MonoBehaviour
     [SerializeField]
     public int lineNumber;
 
-    private SpriteRenderer renderer;
+    private SpriteRenderer spriteRenderer;
 
     // Start is called before the first frame update
     void Start()
     {
-        renderer = GetComponent<SpriteRenderer>();    
+        spriteRenderer = GetComponent<SpriteRenderer>();    
     }
 
     // Update is called once per frame
     void Update()
     {
-        renderer.sprite = isActive ? activeSprite : inactiveSprite;
+        spriteRenderer.sprite = isActive ? activeSprite : inactiveSprite;
 
     }
 }

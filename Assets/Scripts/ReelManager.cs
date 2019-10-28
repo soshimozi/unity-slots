@@ -23,13 +23,10 @@ public class ReelManager : MonoBehaviour
     public float reelCellHeight = 1.48f;
 
     [SerializeField]
-    public GameObject gameWindow;
-
-    [SerializeField]
     public GameObject indicator;
 
     [SerializeField]
-    public Sprite [] activeIndicatorSprites;
+    public Sprite[] activeIndicatorSprites;
 
     [SerializeField]
     public Sprite[] inactiveIndicatorSprites;
@@ -46,7 +43,7 @@ public class ReelManager : MonoBehaviour
     private UIButton lineButton;
 
     [SerializeField]
-    public GameObject [] lineIndicatorObjects;
+    public GameObject[] lineIndicatorObjects;
     private List<LineIndicator> lineIndicators = new List<LineIndicator>();
 
 
@@ -54,7 +51,7 @@ public class ReelManager : MonoBehaviour
     private GameObject[] reelObjects;
     private List<Reel> reels = new List<Reel>();
 
-    private int selectedPayLines;
+    //private int selectedPayLines;
     private int linesIndicatorIndex = 0;
 
     private bool autoSpin;
@@ -104,6 +101,16 @@ public class ReelManager : MonoBehaviour
         {45, 200, 1200}
     };
 
+    readonly int[][] activationLines ={
+        new [] { 0 },
+        new [] { 0, 4, 8 },
+        new [] { 0, 1, 4, 7, 8 },
+        new [] { 0, 1, 3, 4, 5, 7, 8 },
+        new [] { 0, 1, 2, 3, 4, 5, 6, 7, 8 }
+    };
+
+    public int TicketCount { get => ticketCount; set => ticketCount = value; }
+
 
     // Start is called before the first frame update
     void Start()
@@ -116,7 +123,7 @@ public class ReelManager : MonoBehaviour
         readyToSpin = true;
         spinning = false;
 
-        ticketCount = 100000;
+        TicketCount = 100000;
         currentBetAmount = 1;
         maxBet = 15;
         totalWinningsText = "";
@@ -154,20 +161,21 @@ public class ReelManager : MonoBehaviour
             linesIndicatorIndex = 0;
         }
 
-        selectedPayLines = paylineCounts[linesIndicatorIndex];
+        //selectedPayLines = paylineCounts[linesIndicatorIndex] - 1;
 
         HideLinesIndicators();
 
         lineIndicators[linesIndicatorIndex].isActive = true;
 
-        // get list of lines we should activate
+        ClearIndicators();
 
-        leftIndicators[lineIndex].isActive = false;
-        rightIndicators[lineIndex].isActive = false;
+        foreach(var index in activationLines[linesIndicatorIndex])
+        {
+            leftIndicators[index].isActive = true;
+            rightIndicators[index].isActive = true;
+        }
 
-        leftIndicators[lineIndex].isActive = true;
-        rightIndicators[lineIndex].isActive = true;
-
+        currentBet.PayLinesIndex = linesIndicatorIndex;
     }
 
     private void HideLinesIndicators()
@@ -228,17 +236,17 @@ public class ReelManager : MonoBehaviour
     private int [] GetWinningRows()
     {
         List<int> winLines = new List<int>();
-        for (var i = 0; i < paylineCounts[currentBet.PayLinesIndex]; i++)
+
+        foreach (var index in activationLines[linesIndicatorIndex])
         {
-            var matchCount = CheckPayLine(paylineCheckPatterns[i]);
+            var matchCount = CheckPayLine(paylineCheckPatterns[index]);
 
             //// we have a winner
             if (matchCount > 1)
             {
-                winLines.Add(i);
+                winLines.Add(index);
             }
         }
-
 
         return winLines.ToArray();
     }
@@ -472,9 +480,7 @@ public class ReelManager : MonoBehaviour
 
         spinning = true;
 
-        currentBet.Amount = paylineCounts[selectedPayLines] * currentBetAmount;
-        currentBet.IsDoubleDown = isDoubleDown;
-        currentBet.PayLinesIndex = selectedPayLines;
+        currentBet.Amount = paylineCounts[currentBet.PayLinesIndex] * currentBetAmount;
 
         stoppedCount = 0;
         StartCoroutine(SpinReels());

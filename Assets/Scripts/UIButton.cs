@@ -25,6 +25,14 @@ public class UIButton : MonoBehaviour
 
     void Update()
     {
+        if (isDisabled)
+        {
+            spriteRenderer.color = Color.gray;
+        }
+        else
+        {
+            spriteRenderer.color = Color.white;
+        }
     }
 
     private void OnMouseUpAsButton()
@@ -37,14 +45,7 @@ public class UIButton : MonoBehaviour
     {
         isDisabled = disable;
 
-        if(isDisabled)
-        {
-            spriteRenderer.color = Color.gray;
-        }
-        else
-        {
-            spriteRenderer.color = Color.white;
-        }
+
 
     }
 
