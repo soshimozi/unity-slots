@@ -34,6 +34,10 @@ public class Reel : MonoBehaviour
     [SerializeField]
     public GameObject frame;
 
+    [SerializeField]
+    public AudioClip reelStoppedClip;
+
+
     private List<GameObject> cellGameObjects = new List<GameObject>();
     private List<ReelCell> reelCells = new List<ReelCell>();
 
@@ -56,11 +60,11 @@ public class Reel : MonoBehaviour
     private readonly float[] weights = new float[] { 0.1f, 0.25f, 0.025f, 0.1f, 0.125f, 0.25f, 0.125f, 0.025f };
 
     private const int totalCells = 100;
-    private const int visibleCells = 3;
+    public static int visibleCells = 3;
+
+    private AudioSource audioSource;
 
     public event EventHandler ReelStopped;
-
-    
 
     // Start is called before the first frame update
     void Start()
@@ -108,6 +112,7 @@ public class Reel : MonoBehaviour
         reelHeight = indexes.Length - visibleCells;
 
         readyForScore = false;
+        audioSource = GetComponent<AudioSource>();
     }
 
     public void SpinReel()
@@ -126,6 +131,8 @@ public class Reel : MonoBehaviour
         {
             reelStopped = false;
             startTime = Time.time;
+
+            StartCoroutine(PlayReelSound());
         });
     }
 
@@ -151,6 +158,11 @@ public class Reel : MonoBehaviour
 
     }
 
+    IEnumerator PlayReelSound()
+    {
+        yield return new WaitForSeconds(0.25f);
+        audioSource.Play();
+    }
     IEnumerator Stop(float waitTime)
     {
         yield return new WaitForSeconds(waitTime/1000.0f);
@@ -217,6 +229,9 @@ public class Reel : MonoBehaviour
 
                 var destinationY = -(closestY * cellHeight);
                 destinationY += halfCellHeight;
+
+                audioSource.Stop();
+                audioSource.PlayOneShot(reelStoppedClip);
 
                 transform
                 .DOMoveY(destinationY, 0.35f)

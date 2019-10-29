@@ -43,9 +43,30 @@ public class ReelManager : MonoBehaviour
     private UIButton lineButton;
 
     [SerializeField]
+    public GameObject doubleButtonObject;
+    private UIButton doubleButton;
+
+    [SerializeField]
+    public GameObject ticketsPerLine;
+    private IntegerSprite ticketsPerLineText;
+
+    [SerializeField]
+    public GameObject spinNumbers;
+    private IntegerSprite spinNumbersText;
+
+
+    [SerializeField]
+    public GameObject scoreDisplay;
+    private StringSprite scoreDisplayText;
+
+    [SerializeField]
     public GameObject[] lineIndicatorObjects;
     private List<LineIndicator> lineIndicators = new List<LineIndicator>();
 
+    private AudioSource audioSource;
+
+    [SerializeField]
+    public AudioClip spinButtonClip;
 
     private int stoppedCount;
     private GameObject[] reelObjects;
@@ -150,6 +171,30 @@ public class ReelManager : MonoBehaviour
         lineButton.SetDisable(false);
 
         lineButton.OnClick += LineButton_OnClick;
+        linesIndicatorIndex = 0;
+        ConfigureLineIndicators();
+
+        doubleButton = doubleButtonObject.GetComponent<UIButton>();
+        doubleButton.SetDisable(false);
+
+        doubleButton.OnClick += DoubleButton_OnClick;
+
+        ticketsPerLineText = ticketsPerLine.GetComponent<IntegerSprite>();
+        ticketsPerLineText.number = 5;
+
+        scoreDisplayText = scoreDisplay.GetComponent<StringSprite>();
+        scoreDisplayText.spriteString = "Hello World!";
+
+        spinNumbersText = spinNumbers.GetComponent<IntegerSprite>();
+        spinNumbersText.number = 15;
+
+        audioSource = GetComponent<AudioSource>();
+    }
+
+    private void DoubleButton_OnClick(object sender, EventArgs e)
+    {
+        // double bet here
+        Debug.Log("double bet here");
     }
 
     private void LineButton_OnClick(object sender, EventArgs e)
@@ -161,15 +206,18 @@ public class ReelManager : MonoBehaviour
             linesIndicatorIndex = 0;
         }
 
-        //selectedPayLines = paylineCounts[linesIndicatorIndex] - 1;
+        ConfigureLineIndicators();
+    }
 
+    private void ConfigureLineIndicators()
+    {
         HideLinesIndicators();
 
         lineIndicators[linesIndicatorIndex].isActive = true;
 
         ClearIndicators();
 
-        foreach(var index in activationLines[linesIndicatorIndex])
+        foreach (var index in activationLines[linesIndicatorIndex])
         {
             leftIndicators[index].isActive = true;
             rightIndicators[index].isActive = true;
@@ -298,18 +346,20 @@ public class ReelManager : MonoBehaviour
     private void SetReadyToSpin()
     {
         autoSpinButton.SetDisable(false);
+        lineButton.SetDisable(false);
+        doubleButton.SetDisable(false);
         readyToSpin = true;
     }
 
     private void CalculateScore()
     {
-        int[,] tableu = new int[5, 3];
+        int[,] tableu = new int[reels.Count, Reel.visibleCells];
 
-        for (var i = 0; i < 5; i++)
+        for (var i = 0; i < reels.Count; i++)
         {
             var values = reels[i].GetDisplayedCells();
 
-            for(var j=0; j< 3; j++)
+            for(var j=0; j< Reel.visibleCells; j++)
             {
                 tableu[i, j] = values[j];
             }
@@ -323,6 +373,7 @@ public class ReelManager : MonoBehaviour
             return;
         }
 
+        // update and display the score
         UpdateScores(tableu, winningRows);
 
         StartCoroutine(DisplayWinLines(winningRows));
@@ -436,8 +487,7 @@ public class ReelManager : MonoBehaviour
 
         for(var i=0; i<reels.Count; i++)
         {
-            // todo get rid of "magic number"
-            for (var j = 0; j < 3; j++)
+            for (var j = 0; j < Reel.visibleCells; j++)
             {
                 reels[i].ShowWinning(j, false);
             }
@@ -447,10 +497,6 @@ public class ReelManager : MonoBehaviour
     private void UpdateScores(int [,] tableu, int [] winningRows)
     {
         var totalWinnings = 0;
-
-        //5 4 3 5 1
-        //5 5 5 4 2
-        //5 5 3 3 3
 
         // for each payline we multply the bet by the payout amount of the first match
         for (var i = 0; i < winningRows.Length; i++)
@@ -473,8 +519,6 @@ public class ReelManager : MonoBehaviour
     {
         ClearWinLines();
 
-        //ClearIndicators();
-
         readyToShowResults = false;
         readyToSpin = false;
 
@@ -483,19 +527,22 @@ public class ReelManager : MonoBehaviour
         currentBet.Amount = paylineCounts[currentBet.PayLinesIndex] * currentBetAmount;
 
         stoppedCount = 0;
+
+        lineButton.SetDisable(true);
+        doubleButton.SetDisable(true);
+
+        audioSource.PlayOneShot(spinButtonClip);
+
         StartCoroutine(SpinReels());
-        //for (var i = 0; i < reelCount; i++)
-        //{
-        //    reels[i].SpinReel();
-        //}
     }
 
     IEnumerator SpinReels()
     {
+
         for (var i = 0; i < reelCount; i++)
         {
             reels[i].SpinReel();
-            yield return new WaitForSeconds(0.10f);
+            yield return new WaitForSeconds(0.05f);
         }
 
     }
